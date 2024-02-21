@@ -27,6 +27,19 @@ impl BehaviorRequest {
 }
 
 #[derive(Clone, Debug)]
+pub struct BehaviorResponse {
+    pub list_all_behaviors_response: ListAllBehaviorsResponse,
+}
+
+impl BehaviorResponse {
+    pub fn new(list_all_behaviors_response: ListAllBehaviorsResponse) -> Self {
+        Self {
+            list_all_behaviors_response,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct BehaviorSubsystem {
     pub behavior_request: BehaviorRequest,
 }
@@ -34,6 +47,17 @@ pub struct BehaviorSubsystem {
 impl BehaviorSubsystem {
     pub fn new(behavior_request: BehaviorRequest) -> Self {
         Self { behavior_request }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct BehaviorSummary {
+    pub name: String,
+}
+
+impl BehaviorSummary {
+    pub fn new(name: String) -> Self {
+        Self { name }
     }
 }
 
@@ -55,6 +79,17 @@ impl CoreRequest {
 
     pub fn new_lock_request(lock_request: LockRequest) -> Self {
         Self::LockRequest(lock_request)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CoreResponse {
+    pub index_1: GetLockStateResponseOrUnlockResponseOrLockResponse,
+}
+
+impl CoreResponse {
+    pub fn new(index_1: GetLockStateResponseOrUnlockResponseOrLockResponse) -> Self {
+        Self { index_1 }
     }
 }
 
@@ -109,6 +144,19 @@ impl Default for GetLayersSummary {
 }
 
 #[derive(Clone, Debug)]
+pub struct GetLayersSummaryResponse {
+    pub keymap_layer_summary: KeymapLayerSummary,
+}
+
+impl GetLayersSummaryResponse {
+    pub fn new(keymap_layer_summary: KeymapLayerSummary) -> Self {
+        Self {
+            keymap_layer_summary,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct GetLockState;
 
 impl GetLockState {
@@ -123,7 +171,64 @@ impl Default for GetLockState {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct GetLockStateResponse {
+    pub locked: bool,
+}
+
+impl GetLockStateResponse {
+    pub fn new(locked: bool) -> Self {
+        Self { locked }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum GetLockStateResponseOrUnlockResponseOrLockResponse {
+    GetLockStateResponse(GetLockStateResponse),
+    UnlockResponse(UnlockResponse),
+    LockResponse(LockResponse),
+}
+
+impl GetLockStateResponseOrUnlockResponseOrLockResponse {
+    pub fn new_get_lock_state_response(get_lock_state_response: GetLockStateResponse) -> Self {
+        Self::GetLockStateResponse(get_lock_state_response)
+    }
+
+    pub fn new_unlock_response(unlock_response: UnlockResponse) -> Self {
+        Self::UnlockResponse(unlock_response)
+    }
+
+    pub fn new_lock_response(lock_response: LockResponse) -> Self {
+        Self::LockResponse(lock_response)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct KeymapLayerSummary {
+    pub name: String,
+    pub enabled: bool,
+}
+
+impl KeymapLayerSummary {
+    pub fn new(name: String, enabled: bool) -> Self {
+        Self { name, enabled }
+    }
+}
+
 pub type KeymapRequest = GetLayersSummary;
+
+#[derive(Clone, Debug)]
+pub struct KeymapResponse {
+    pub get_layers_summary_response: GetLayersSummaryResponse,
+}
+
+impl KeymapResponse {
+    pub fn new(get_layers_summary_response: GetLayersSummaryResponse) -> Self {
+        Self {
+            get_layers_summary_response,
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct KeymapSubsystem {
@@ -152,6 +257,17 @@ impl Default for ListAllBehaviors {
 }
 
 #[derive(Clone, Debug)]
+pub struct ListAllBehaviorsResponse {
+    pub behavior_summary: BehaviorSummary,
+}
+
+impl ListAllBehaviorsResponse {
+    pub fn new(behavior_summary: BehaviorSummary) -> Self {
+        Self { behavior_summary }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct LockRequest;
 
 impl LockRequest {
@@ -165,6 +281,36 @@ impl Default for LockRequest {
         Self::new()
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct LockResponse;
+
+impl LockResponse {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Default for LockResponse {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Notification {
+    pub notification_payload: NotificationPayload,
+}
+
+impl Notification {
+    pub fn new(notification_payload: NotificationPayload) -> Self {
+        Self {
+            notification_payload,
+        }
+    }
+}
+
+pub type NotificationPayload = u64;
 
 #[derive(Clone, Debug)]
 pub enum Request {
@@ -188,6 +334,54 @@ impl Request {
 }
 
 #[derive(Clone, Debug)]
+pub struct RequestResponse {
+    pub response_payload: ResponsePayload,
+}
+
+impl RequestResponse {
+    pub fn new(response_payload: ResponsePayload) -> Self {
+        Self { response_payload }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum Response {
+    Notification(Notification),
+    RequestResponse(RequestResponse),
+}
+
+impl Response {
+    pub fn new_notification(notification: Notification) -> Self {
+        Self::Notification(notification)
+    }
+
+    pub fn new_request_response(request_response: RequestResponse) -> Self {
+        Self::RequestResponse(request_response)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum ResponsePayload {
+    CoreResponse(CoreResponse),
+    KeymapResponse(KeymapResponse),
+    BehaviorResponse(BehaviorResponse),
+}
+
+impl ResponsePayload {
+    pub fn new_core_response(core_response: CoreResponse) -> Self {
+        Self::CoreResponse(core_response)
+    }
+
+    pub fn new_keymap_response(keymap_response: KeymapResponse) -> Self {
+        Self::KeymapResponse(keymap_response)
+    }
+
+    pub fn new_behavior_response(behavior_response: BehaviorResponse) -> Self {
+        Self::BehaviorResponse(behavior_response)
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct UnlockRequest;
 
 impl UnlockRequest {
@@ -197,6 +391,21 @@ impl UnlockRequest {
 }
 
 impl Default for UnlockRequest {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct UnlockResponse;
+
+impl UnlockResponse {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Default for UnlockResponse {
     fn default() -> Self {
         Self::new()
     }

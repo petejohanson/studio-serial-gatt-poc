@@ -120,14 +120,23 @@ pub fn main_js() -> Result<(), JsValue> {
 
     let window = web_sys::window().expect("no global `window` exists");
     let document = window.document().expect("should have a document on window");
-    let button = document.query_selector("#button").unwrap().expect("should have a button with that ID");
+    let ble_button = document.query_selector("#ble_button").unwrap().expect("should have a button with that ID");
 
-    let cb = Closure::wrap(Box::new(|e: web_sys::Event| {
+    let ble_cb = Closure::wrap(Box::new(|e: web_sys::Event| {
         wasm_bindgen_futures::spawn_local(test_ble());
     }) as Box<dyn FnMut(_)>);
 
-    button.add_event_listener_with_callback("click", &cb.as_ref().unchecked_ref());
-    cb.forget();
+    ble_button.add_event_listener_with_callback("click", &ble_cb.as_ref().unchecked_ref());
+    ble_cb.forget();
+
+    let serial_button = document.query_selector("#serial_button").unwrap().expect("should have a button with that ID");
+
+    let serial_cb = Closure::wrap(Box::new(|e: web_sys::Event| {
+        wasm_bindgen_futures::spawn_local(test_serial());
+    }) as Box<dyn FnMut(_)>);
+
+    serial_button.add_event_listener_with_callback("click", &serial_cb.as_ref().unchecked_ref());
+    serial_cb.forget();
 
 
 

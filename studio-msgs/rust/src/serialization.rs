@@ -154,6 +154,54 @@ impl Deserialize for BehaviorRequest {
     }
 }
 
+impl cbor_event::se::Serialize for BehaviorResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_unsigned_integer(2u64)?;
+        self.list_all_behaviors_response.serialize(serializer)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for BehaviorResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 2 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(2),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            let list_all_behaviors_response = ListAllBehaviorsResponse::deserialize(raw)
+                .map_err(|e: DeserializeError| e.annotate("list_all_behaviors_response"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(BehaviorResponse {
+                list_all_behaviors_response,
+            })
+        })()
+        .map_err(|e| e.annotate("BehaviorResponse"))
+    }
+}
+
 impl cbor_event::se::Serialize for BehaviorSubsystem {
     fn serialize<'se, W: Write>(
         &self,
@@ -197,6 +245,39 @@ impl Deserialize for BehaviorSubsystem {
             Ok(BehaviorSubsystem { behavior_request })
         })()
         .map_err(|e| e.annotate("BehaviorSubsystem"))
+    }
+}
+
+impl cbor_event::se::Serialize for BehaviorSummary {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(1))?;
+        serializer.write_text(&self.name)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for BehaviorSummary {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(1)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            let name =
+                Ok(raw.text()? as String).map_err(|e: DeserializeError| e.annotate("name"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(BehaviorSummary { name })
+        })()
+        .map_err(|e| e.annotate("BehaviorSummary"))
     }
 }
 
@@ -254,6 +335,52 @@ impl Deserialize for CoreRequest {
             ))
         })()
         .map_err(|e| e.annotate("CoreRequest"))
+    }
+}
+
+impl cbor_event::se::Serialize for CoreResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_unsigned_integer(0u64)?;
+        self.index_1.serialize(serializer)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for CoreResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 0 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(0),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            let index_1 = GetLockStateResponseOrUnlockResponseOrLockResponse::deserialize(raw)
+                .map_err(|e: DeserializeError| e.annotate("index_1"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(CoreResponse { index_1 })
+        })()
+        .map_err(|e| e.annotate("CoreResponse"))
     }
 }
 
@@ -427,6 +554,54 @@ impl Deserialize for GetLayersSummary {
     }
 }
 
+impl cbor_event::se::Serialize for GetLayersSummaryResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_unsigned_integer(0u64)?;
+        self.keymap_layer_summary.serialize(serializer)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for GetLayersSummaryResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 0 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(0),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            let keymap_layer_summary = KeymapLayerSummary::deserialize(raw)
+                .map_err(|e: DeserializeError| e.annotate("keymap_layer_summary"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(GetLayersSummaryResponse {
+                keymap_layer_summary,
+            })
+        })()
+        .map_err(|e| e.annotate("GetLayersSummaryResponse"))
+    }
+}
+
 impl cbor_event::se::Serialize for GetLockState {
     fn serialize<'se, W: Write>(
         &self,
@@ -467,6 +642,205 @@ impl Deserialize for GetLockState {
             Ok(GetLockState {})
         })()
         .map_err(|e| e.annotate("GetLockState"))
+    }
+}
+
+impl cbor_event::se::Serialize for GetLockStateResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_unsigned_integer(0u64)?;
+        serializer.write_special(cbor_event::Special::Bool(self.locked))?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for GetLockStateResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 0 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(0),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            let locked = raw
+                .bool()
+                .map_err(Into::into)
+                .map_err(|e: DeserializeError| e.annotate("locked"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(GetLockStateResponse { locked })
+        })()
+        .map_err(|e| e.annotate("GetLockStateResponse"))
+    }
+}
+
+impl cbor_event::se::Serialize for GetLockStateResponseOrUnlockResponseOrLockResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        match self {
+            GetLockStateResponseOrUnlockResponseOrLockResponse::GetLockStateResponse(
+                get_lock_state_response,
+            ) => get_lock_state_response.serialize(serializer),
+            GetLockStateResponseOrUnlockResponseOrLockResponse::UnlockResponse(unlock_response) => {
+                unlock_response.serialize(serializer)
+            }
+            GetLockStateResponseOrUnlockResponseOrLockResponse::LockResponse(lock_response) => {
+                lock_response.serialize(serializer)
+            }
+        }
+    }
+}
+
+impl Deserialize for GetLockStateResponseOrUnlockResponseOrLockResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        (|| -> Result<_, DeserializeError> {
+            let initial_position = raw.as_mut_ref().stream_position().unwrap();
+            let mut errs = Vec::new();
+            let deser_variant: Result<_, DeserializeError> = GetLockStateResponse::deserialize(raw);
+            match deser_variant {
+                Ok(get_lock_state_response) => {
+                    return Ok(Self::GetLockStateResponse(get_lock_state_response))
+                }
+                Err(e) => {
+                    errs.push(e.annotate("GetLockStateResponse"));
+                    raw.as_mut_ref()
+                        .seek(SeekFrom::Start(initial_position))
+                        .unwrap();
+                }
+            };
+            let deser_variant: Result<_, DeserializeError> = UnlockResponse::deserialize(raw);
+            match deser_variant {
+                Ok(unlock_response) => return Ok(Self::UnlockResponse(unlock_response)),
+                Err(e) => {
+                    errs.push(e.annotate("UnlockResponse"));
+                    raw.as_mut_ref()
+                        .seek(SeekFrom::Start(initial_position))
+                        .unwrap();
+                }
+            };
+            let deser_variant: Result<_, DeserializeError> = LockResponse::deserialize(raw);
+            match deser_variant {
+                Ok(lock_response) => return Ok(Self::LockResponse(lock_response)),
+                Err(e) => {
+                    errs.push(e.annotate("LockResponse"));
+                    raw.as_mut_ref()
+                        .seek(SeekFrom::Start(initial_position))
+                        .unwrap();
+                }
+            };
+            Err(DeserializeError::new(
+                "GetLockStateResponseOrUnlockResponseOrLockResponse",
+                DeserializeFailure::NoVariantMatchedWithCauses(errs),
+            ))
+        })()
+        .map_err(|e| e.annotate("GetLockStateResponseOrUnlockResponseOrLockResponse"))
+    }
+}
+
+impl cbor_event::se::Serialize for KeymapLayerSummary {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_text(&self.name)?;
+        serializer.write_special(cbor_event::Special::Bool(self.enabled))?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for KeymapLayerSummary {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            let name =
+                Ok(raw.text()? as String).map_err(|e: DeserializeError| e.annotate("name"))?;
+            let enabled = raw
+                .bool()
+                .map_err(Into::into)
+                .map_err(|e: DeserializeError| e.annotate("enabled"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(KeymapLayerSummary { name, enabled })
+        })()
+        .map_err(|e| e.annotate("KeymapLayerSummary"))
+    }
+}
+
+impl cbor_event::se::Serialize for KeymapResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_unsigned_integer(1u64)?;
+        self.get_layers_summary_response.serialize(serializer)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for KeymapResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 1 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(1),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            let get_layers_summary_response = GetLayersSummaryResponse::deserialize(raw)
+                .map_err(|e: DeserializeError| e.annotate("get_layers_summary_response"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(KeymapResponse {
+                get_layers_summary_response,
+            })
+        })()
+        .map_err(|e| e.annotate("KeymapResponse"))
     }
 }
 
@@ -559,6 +933,52 @@ impl Deserialize for ListAllBehaviors {
     }
 }
 
+impl cbor_event::se::Serialize for ListAllBehaviorsResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_unsigned_integer(1u64)?;
+        self.behavior_summary.serialize(serializer)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for ListAllBehaviorsResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 1 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(1),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            let behavior_summary = BehaviorSummary::deserialize(raw)
+                .map_err(|e: DeserializeError| e.annotate("behavior_summary"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(ListAllBehaviorsResponse { behavior_summary })
+        })()
+        .map_err(|e| e.annotate("ListAllBehaviorsResponse"))
+    }
+}
+
 impl cbor_event::se::Serialize for LockRequest {
     fn serialize<'se, W: Write>(
         &self,
@@ -599,6 +1019,97 @@ impl Deserialize for LockRequest {
             Ok(LockRequest {})
         })()
         .map_err(|e| e.annotate("LockRequest"))
+    }
+}
+
+impl cbor_event::se::Serialize for LockResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(1))?;
+        serializer.write_unsigned_integer(2u64)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for LockResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(1)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 2 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(2),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(LockResponse {})
+        })()
+        .map_err(|e| e.annotate("LockResponse"))
+    }
+}
+
+impl cbor_event::se::Serialize for Notification {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_unsigned_integer(0u64)?;
+        serializer.write_unsigned_integer(self.notification_payload)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for Notification {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 0 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(0),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            let notification_payload = Ok(raw.unsigned_integer()? as u64)
+                .map_err(|e: DeserializeError| e.annotate("notification_payload"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(Notification {
+                notification_payload,
+            })
+        })()
+        .map_err(|e| e.annotate("Notification"))
     }
 }
 
@@ -661,6 +1172,159 @@ impl Deserialize for Request {
     }
 }
 
+impl cbor_event::se::Serialize for RequestResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(2))?;
+        serializer.write_unsigned_integer(1u64)?;
+        self.response_payload.serialize(serializer)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for RequestResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(2)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 1 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(1),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            let response_payload = ResponsePayload::deserialize(raw)
+                .map_err(|e: DeserializeError| e.annotate("response_payload"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(RequestResponse { response_payload })
+        })()
+        .map_err(|e| e.annotate("RequestResponse"))
+    }
+}
+
+impl cbor_event::se::Serialize for Response {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        match self {
+            Response::Notification(notification) => notification.serialize(serializer),
+            Response::RequestResponse(request_response) => request_response.serialize(serializer),
+        }
+    }
+}
+
+impl Deserialize for Response {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        (|| -> Result<_, DeserializeError> {
+            let initial_position = raw.as_mut_ref().stream_position().unwrap();
+            let mut errs = Vec::new();
+            let deser_variant: Result<_, DeserializeError> = Notification::deserialize(raw);
+            match deser_variant {
+                Ok(notification) => return Ok(Self::Notification(notification)),
+                Err(e) => {
+                    errs.push(e.annotate("Notification"));
+                    raw.as_mut_ref()
+                        .seek(SeekFrom::Start(initial_position))
+                        .unwrap();
+                }
+            };
+            let deser_variant: Result<_, DeserializeError> = RequestResponse::deserialize(raw);
+            match deser_variant {
+                Ok(request_response) => return Ok(Self::RequestResponse(request_response)),
+                Err(e) => {
+                    errs.push(e.annotate("RequestResponse"));
+                    raw.as_mut_ref()
+                        .seek(SeekFrom::Start(initial_position))
+                        .unwrap();
+                }
+            };
+            Err(DeserializeError::new(
+                "Response",
+                DeserializeFailure::NoVariantMatchedWithCauses(errs),
+            ))
+        })()
+        .map_err(|e| e.annotate("Response"))
+    }
+}
+
+impl cbor_event::se::Serialize for ResponsePayload {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        match self {
+            ResponsePayload::CoreResponse(core_response) => core_response.serialize(serializer),
+            ResponsePayload::KeymapResponse(keymap_response) => {
+                keymap_response.serialize(serializer)
+            }
+            ResponsePayload::BehaviorResponse(behavior_response) => {
+                behavior_response.serialize(serializer)
+            }
+        }
+    }
+}
+
+impl Deserialize for ResponsePayload {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        (|| -> Result<_, DeserializeError> {
+            let initial_position = raw.as_mut_ref().stream_position().unwrap();
+            let mut errs = Vec::new();
+            let deser_variant: Result<_, DeserializeError> = CoreResponse::deserialize(raw);
+            match deser_variant {
+                Ok(core_response) => return Ok(Self::CoreResponse(core_response)),
+                Err(e) => {
+                    errs.push(e.annotate("CoreResponse"));
+                    raw.as_mut_ref()
+                        .seek(SeekFrom::Start(initial_position))
+                        .unwrap();
+                }
+            };
+            let deser_variant: Result<_, DeserializeError> = KeymapResponse::deserialize(raw);
+            match deser_variant {
+                Ok(keymap_response) => return Ok(Self::KeymapResponse(keymap_response)),
+                Err(e) => {
+                    errs.push(e.annotate("KeymapResponse"));
+                    raw.as_mut_ref()
+                        .seek(SeekFrom::Start(initial_position))
+                        .unwrap();
+                }
+            };
+            let deser_variant: Result<_, DeserializeError> = BehaviorResponse::deserialize(raw);
+            match deser_variant {
+                Ok(behavior_response) => return Ok(Self::BehaviorResponse(behavior_response)),
+                Err(e) => {
+                    errs.push(e.annotate("BehaviorResponse"));
+                    raw.as_mut_ref()
+                        .seek(SeekFrom::Start(initial_position))
+                        .unwrap();
+                }
+            };
+            Err(DeserializeError::new(
+                "ResponsePayload",
+                DeserializeFailure::NoVariantMatchedWithCauses(errs),
+            ))
+        })()
+        .map_err(|e| e.annotate("ResponsePayload"))
+    }
+}
+
 impl cbor_event::se::Serialize for UnlockRequest {
     fn serialize<'se, W: Write>(
         &self,
@@ -701,5 +1365,48 @@ impl Deserialize for UnlockRequest {
             Ok(UnlockRequest {})
         })()
         .map_err(|e| e.annotate("UnlockRequest"))
+    }
+}
+
+impl cbor_event::se::Serialize for UnlockResponse {
+    fn serialize<'se, W: Write>(
+        &self,
+        serializer: &'se mut Serializer<W>,
+    ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        serializer.write_array(cbor_event::Len::Len(1))?;
+        serializer.write_unsigned_integer(1u64)?;
+        Ok(serializer)
+    }
+}
+
+impl Deserialize for UnlockResponse {
+    fn deserialize<R: BufRead + Seek>(raw: &mut Deserializer<R>) -> Result<Self, DeserializeError> {
+        let len = raw.array()?;
+        let mut read_len = CBORReadLen::new(len);
+        read_len.read_elems(1)?;
+        read_len.finish()?;
+        (|| -> Result<_, DeserializeError> {
+            (|| -> Result<_, DeserializeError> {
+                let index_0_value = raw.unsigned_integer()?;
+                if index_0_value != 1 {
+                    return Err(DeserializeFailure::FixedValueMismatch {
+                        found: Key::Uint(index_0_value),
+                        expected: Key::Uint(1),
+                    }
+                    .into());
+                }
+                Ok(())
+            })()
+            .map_err(|e| e.annotate("index_0"))?;
+            match len {
+                cbor_event::Len::Len(_) => (),
+                cbor_event::Len::Indefinite => match raw.special()? {
+                    cbor_event::Special::Break => (),
+                    _ => return Err(DeserializeFailure::EndingBreakMissing.into()),
+                },
+            }
+            Ok(UnlockResponse {})
+        })()
+        .map_err(|e| e.annotate("UnlockResponse"))
     }
 }

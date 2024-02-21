@@ -91,6 +91,51 @@ pub enum BehaviorRequestKind {
 
 #[derive(Clone, Debug)]
 #[wasm_bindgen]
+pub struct BehaviorResponse(cddl_lib::BehaviorResponse);
+
+#[wasm_bindgen]
+impl BehaviorResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<BehaviorResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn list_all_behaviors_response(&self) -> ListAllBehaviorsResponse {
+        self.0.list_all_behaviors_response.clone().into()
+    }
+
+    pub fn new(list_all_behaviors_response: &ListAllBehaviorsResponse) -> Self {
+        Self(cddl_lib::BehaviorResponse::new(
+            list_all_behaviors_response.clone().into(),
+        ))
+    }
+}
+
+impl From<cddl_lib::BehaviorResponse> for BehaviorResponse {
+    fn from(native: cddl_lib::BehaviorResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<BehaviorResponse> for cddl_lib::BehaviorResponse {
+    fn from(wasm: BehaviorResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::BehaviorResponse> for BehaviorResponse {
+    fn as_ref(&self) -> &cddl_lib::BehaviorResponse {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
 pub struct BehaviorSubsystem(cddl_lib::BehaviorSubsystem);
 
 #[wasm_bindgen]
@@ -130,6 +175,49 @@ impl From<BehaviorSubsystem> for cddl_lib::BehaviorSubsystem {
 
 impl AsRef<cddl_lib::BehaviorSubsystem> for BehaviorSubsystem {
     fn as_ref(&self) -> &cddl_lib::BehaviorSubsystem {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct BehaviorSummary(cddl_lib::BehaviorSummary);
+
+#[wasm_bindgen]
+impl BehaviorSummary {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<BehaviorSummary, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn name(&self) -> String {
+        self.0.name.clone()
+    }
+
+    pub fn new(name: String) -> Self {
+        Self(cddl_lib::BehaviorSummary::new(name))
+    }
+}
+
+impl From<cddl_lib::BehaviorSummary> for BehaviorSummary {
+    fn from(native: cddl_lib::BehaviorSummary) -> Self {
+        Self(native)
+    }
+}
+
+impl From<BehaviorSummary> for cddl_lib::BehaviorSummary {
+    fn from(wasm: BehaviorSummary) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::BehaviorSummary> for BehaviorSummary {
+    fn as_ref(&self) -> &cddl_lib::BehaviorSummary {
         &self.0
     }
 }
@@ -225,6 +313,49 @@ pub enum CoreRequestKind {
     GetLockState,
     UnlockRequest,
     LockRequest,
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct CoreResponse(cddl_lib::CoreResponse);
+
+#[wasm_bindgen]
+impl CoreResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<CoreResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn index_1(&self) -> GetLockStateResponseOrUnlockResponseOrLockResponse {
+        self.0.index_1.clone().into()
+    }
+
+    pub fn new(index_1: &GetLockStateResponseOrUnlockResponseOrLockResponse) -> Self {
+        Self(cddl_lib::CoreResponse::new(index_1.clone().into()))
+    }
+}
+
+impl From<cddl_lib::CoreResponse> for CoreResponse {
+    fn from(native: cddl_lib::CoreResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<CoreResponse> for cddl_lib::CoreResponse {
+    fn from(wasm: CoreResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::CoreResponse> for CoreResponse {
+    fn as_ref(&self) -> &cddl_lib::CoreResponse {
+        &self.0
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -399,6 +530,51 @@ impl AsRef<cddl_lib::GetLayersSummary> for GetLayersSummary {
 
 #[derive(Clone, Debug)]
 #[wasm_bindgen]
+pub struct GetLayersSummaryResponse(cddl_lib::GetLayersSummaryResponse);
+
+#[wasm_bindgen]
+impl GetLayersSummaryResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<GetLayersSummaryResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn keymap_layer_summary(&self) -> KeymapLayerSummary {
+        self.0.keymap_layer_summary.clone().into()
+    }
+
+    pub fn new(keymap_layer_summary: &KeymapLayerSummary) -> Self {
+        Self(cddl_lib::GetLayersSummaryResponse::new(
+            keymap_layer_summary.clone().into(),
+        ))
+    }
+}
+
+impl From<cddl_lib::GetLayersSummaryResponse> for GetLayersSummaryResponse {
+    fn from(native: cddl_lib::GetLayersSummaryResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<GetLayersSummaryResponse> for cddl_lib::GetLayersSummaryResponse {
+    fn from(wasm: GetLayersSummaryResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::GetLayersSummaryResponse> for GetLayersSummaryResponse {
+    fn as_ref(&self) -> &cddl_lib::GetLayersSummaryResponse {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
 pub struct GetLockState(cddl_lib::GetLockState);
 
 #[wasm_bindgen]
@@ -436,7 +612,255 @@ impl AsRef<cddl_lib::GetLockState> for GetLockState {
     }
 }
 
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct GetLockStateResponse(cddl_lib::GetLockStateResponse);
+
+#[wasm_bindgen]
+impl GetLockStateResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<GetLockStateResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn locked(&self) -> bool {
+        self.0.locked
+    }
+
+    pub fn new(locked: bool) -> Self {
+        Self(cddl_lib::GetLockStateResponse::new(locked))
+    }
+}
+
+impl From<cddl_lib::GetLockStateResponse> for GetLockStateResponse {
+    fn from(native: cddl_lib::GetLockStateResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<GetLockStateResponse> for cddl_lib::GetLockStateResponse {
+    fn from(wasm: GetLockStateResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::GetLockStateResponse> for GetLockStateResponse {
+    fn as_ref(&self) -> &cddl_lib::GetLockStateResponse {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct GetLockStateResponseOrUnlockResponseOrLockResponse(
+    cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse,
+);
+
+#[wasm_bindgen]
+impl GetLockStateResponseOrUnlockResponseOrLockResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(
+        cbor_bytes: &[u8],
+    ) -> Result<GetLockStateResponseOrUnlockResponseOrLockResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn new_get_lock_state_response(get_lock_state_response: &GetLockStateResponse) -> Self {
+        Self(cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::new_get_lock_state_response(get_lock_state_response.clone().into()))
+    }
+
+    pub fn new_unlock_response(unlock_response: &UnlockResponse) -> Self {
+        Self(
+            cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::new_unlock_response(
+                unlock_response.clone().into(),
+            ),
+        )
+    }
+
+    pub fn new_lock_response(lock_response: &LockResponse) -> Self {
+        Self(
+            cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::new_lock_response(
+                lock_response.clone().into(),
+            ),
+        )
+    }
+
+    pub fn kind(&self) -> GetLockStateResponseOrUnlockResponseOrLockResponseKind {
+        match &self.0 {
+            cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::GetLockStateResponse(
+                _,
+            ) => GetLockStateResponseOrUnlockResponseOrLockResponseKind::GetLockStateResponse,
+            cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::UnlockResponse(_) => {
+                GetLockStateResponseOrUnlockResponseOrLockResponseKind::UnlockResponse
+            }
+            cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::LockResponse(_) => {
+                GetLockStateResponseOrUnlockResponseOrLockResponseKind::LockResponse
+            }
+        }
+    }
+
+    pub fn as_get_lock_state_response(&self) -> Option<GetLockStateResponse> {
+        match &self.0 {
+            cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::GetLockStateResponse(
+                get_lock_state_response,
+            ) => Some(get_lock_state_response.clone().into()),
+            _ => None,
+        }
+    }
+
+    pub fn as_unlock_response(&self) -> Option<UnlockResponse> {
+        match &self.0 {
+            cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::UnlockResponse(
+                unlock_response,
+            ) => Some(unlock_response.clone().into()),
+            _ => None,
+        }
+    }
+
+    pub fn as_lock_response(&self) -> Option<LockResponse> {
+        match &self.0 {
+            cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse::LockResponse(
+                lock_response,
+            ) => Some(lock_response.clone().into()),
+            _ => None,
+        }
+    }
+}
+
+impl From<cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse>
+    for GetLockStateResponseOrUnlockResponseOrLockResponse
+{
+    fn from(native: cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<GetLockStateResponseOrUnlockResponseOrLockResponse>
+    for cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse
+{
+    fn from(wasm: GetLockStateResponseOrUnlockResponseOrLockResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse>
+    for GetLockStateResponseOrUnlockResponseOrLockResponse
+{
+    fn as_ref(&self) -> &cddl_lib::GetLockStateResponseOrUnlockResponseOrLockResponse {
+        &self.0
+    }
+}
+
+#[wasm_bindgen]
+pub enum GetLockStateResponseOrUnlockResponseOrLockResponseKind {
+    GetLockStateResponse,
+    UnlockResponse,
+    LockResponse,
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct KeymapLayerSummary(cddl_lib::KeymapLayerSummary);
+
+#[wasm_bindgen]
+impl KeymapLayerSummary {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<KeymapLayerSummary, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn name(&self) -> String {
+        self.0.name.clone()
+    }
+
+    pub fn enabled(&self) -> bool {
+        self.0.enabled
+    }
+
+    pub fn new(name: String, enabled: bool) -> Self {
+        Self(cddl_lib::KeymapLayerSummary::new(name, enabled))
+    }
+}
+
+impl From<cddl_lib::KeymapLayerSummary> for KeymapLayerSummary {
+    fn from(native: cddl_lib::KeymapLayerSummary) -> Self {
+        Self(native)
+    }
+}
+
+impl From<KeymapLayerSummary> for cddl_lib::KeymapLayerSummary {
+    fn from(wasm: KeymapLayerSummary) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::KeymapLayerSummary> for KeymapLayerSummary {
+    fn as_ref(&self) -> &cddl_lib::KeymapLayerSummary {
+        &self.0
+    }
+}
+
 pub type KeymapRequest = GetLayersSummary;
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct KeymapResponse(cddl_lib::KeymapResponse);
+
+#[wasm_bindgen]
+impl KeymapResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<KeymapResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn get_layers_summary_response(&self) -> GetLayersSummaryResponse {
+        self.0.get_layers_summary_response.clone().into()
+    }
+
+    pub fn new(get_layers_summary_response: &GetLayersSummaryResponse) -> Self {
+        Self(cddl_lib::KeymapResponse::new(
+            get_layers_summary_response.clone().into(),
+        ))
+    }
+}
+
+impl From<cddl_lib::KeymapResponse> for KeymapResponse {
+    fn from(native: cddl_lib::KeymapResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<KeymapResponse> for cddl_lib::KeymapResponse {
+    fn from(wasm: KeymapResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::KeymapResponse> for KeymapResponse {
+    fn as_ref(&self) -> &cddl_lib::KeymapResponse {
+        &self.0
+    }
+}
 
 #[derive(Clone, Debug)]
 #[wasm_bindgen]
@@ -524,6 +948,51 @@ impl AsRef<cddl_lib::ListAllBehaviors> for ListAllBehaviors {
 
 #[derive(Clone, Debug)]
 #[wasm_bindgen]
+pub struct ListAllBehaviorsResponse(cddl_lib::ListAllBehaviorsResponse);
+
+#[wasm_bindgen]
+impl ListAllBehaviorsResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<ListAllBehaviorsResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn behavior_summary(&self) -> BehaviorSummary {
+        self.0.behavior_summary.clone().into()
+    }
+
+    pub fn new(behavior_summary: &BehaviorSummary) -> Self {
+        Self(cddl_lib::ListAllBehaviorsResponse::new(
+            behavior_summary.clone().into(),
+        ))
+    }
+}
+
+impl From<cddl_lib::ListAllBehaviorsResponse> for ListAllBehaviorsResponse {
+    fn from(native: cddl_lib::ListAllBehaviorsResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<ListAllBehaviorsResponse> for cddl_lib::ListAllBehaviorsResponse {
+    fn from(wasm: ListAllBehaviorsResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::ListAllBehaviorsResponse> for ListAllBehaviorsResponse {
+    fn as_ref(&self) -> &cddl_lib::ListAllBehaviorsResponse {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
 pub struct LockRequest(cddl_lib::LockRequest);
 
 #[wasm_bindgen]
@@ -560,6 +1029,90 @@ impl AsRef<cddl_lib::LockRequest> for LockRequest {
         &self.0
     }
 }
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct LockResponse(cddl_lib::LockResponse);
+
+#[wasm_bindgen]
+impl LockResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<LockResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn new() -> Self {
+        Self(cddl_lib::LockResponse::new())
+    }
+}
+
+impl From<cddl_lib::LockResponse> for LockResponse {
+    fn from(native: cddl_lib::LockResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<LockResponse> for cddl_lib::LockResponse {
+    fn from(wasm: LockResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::LockResponse> for LockResponse {
+    fn as_ref(&self) -> &cddl_lib::LockResponse {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct Notification(cddl_lib::Notification);
+
+#[wasm_bindgen]
+impl Notification {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<Notification, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn notification_payload(&self) -> NotificationPayload {
+        self.0.notification_payload
+    }
+
+    pub fn new(notification_payload: NotificationPayload) -> Self {
+        Self(cddl_lib::Notification::new(notification_payload))
+    }
+}
+
+impl From<cddl_lib::Notification> for Notification {
+    fn from(native: cddl_lib::Notification) -> Self {
+        Self(native)
+    }
+}
+
+impl From<Notification> for cddl_lib::Notification {
+    fn from(wasm: Notification) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::Notification> for Notification {
+    fn as_ref(&self) -> &cddl_lib::Notification {
+        &self.0
+    }
+}
+
+pub type NotificationPayload = u64;
 
 #[derive(Clone, Debug)]
 #[wasm_bindgen]
@@ -656,6 +1209,222 @@ pub enum RequestKind {
 
 #[derive(Clone, Debug)]
 #[wasm_bindgen]
+pub struct RequestResponse(cddl_lib::RequestResponse);
+
+#[wasm_bindgen]
+impl RequestResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<RequestResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn response_payload(&self) -> ResponsePayload {
+        self.0.response_payload.clone().into()
+    }
+
+    pub fn new(response_payload: &ResponsePayload) -> Self {
+        Self(cddl_lib::RequestResponse::new(
+            response_payload.clone().into(),
+        ))
+    }
+}
+
+impl From<cddl_lib::RequestResponse> for RequestResponse {
+    fn from(native: cddl_lib::RequestResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<RequestResponse> for cddl_lib::RequestResponse {
+    fn from(wasm: RequestResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::RequestResponse> for RequestResponse {
+    fn as_ref(&self) -> &cddl_lib::RequestResponse {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct Response(cddl_lib::Response);
+
+#[wasm_bindgen]
+impl Response {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<Response, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn new_notification(notification: &Notification) -> Self {
+        Self(cddl_lib::Response::new_notification(
+            notification.clone().into(),
+        ))
+    }
+
+    pub fn new_request_response(request_response: &RequestResponse) -> Self {
+        Self(cddl_lib::Response::new_request_response(
+            request_response.clone().into(),
+        ))
+    }
+
+    pub fn kind(&self) -> ResponseKind {
+        match &self.0 {
+            cddl_lib::Response::Notification(_) => ResponseKind::Notification,
+            cddl_lib::Response::RequestResponse(_) => ResponseKind::RequestResponse,
+        }
+    }
+
+    pub fn as_notification(&self) -> Option<Notification> {
+        match &self.0 {
+            cddl_lib::Response::Notification(notification) => Some(notification.clone().into()),
+            _ => None,
+        }
+    }
+
+    pub fn as_request_response(&self) -> Option<RequestResponse> {
+        match &self.0 {
+            cddl_lib::Response::RequestResponse(request_response) => {
+                Some(request_response.clone().into())
+            }
+            _ => None,
+        }
+    }
+}
+
+impl From<cddl_lib::Response> for Response {
+    fn from(native: cddl_lib::Response) -> Self {
+        Self(native)
+    }
+}
+
+impl From<Response> for cddl_lib::Response {
+    fn from(wasm: Response) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::Response> for Response {
+    fn as_ref(&self) -> &cddl_lib::Response {
+        &self.0
+    }
+}
+
+#[wasm_bindgen]
+pub enum ResponseKind {
+    Notification,
+    RequestResponse,
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct ResponsePayload(cddl_lib::ResponsePayload);
+
+#[wasm_bindgen]
+impl ResponsePayload {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<ResponsePayload, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn new_core_response(core_response: &CoreResponse) -> Self {
+        Self(cddl_lib::ResponsePayload::new_core_response(
+            core_response.clone().into(),
+        ))
+    }
+
+    pub fn new_keymap_response(keymap_response: &KeymapResponse) -> Self {
+        Self(cddl_lib::ResponsePayload::new_keymap_response(
+            keymap_response.clone().into(),
+        ))
+    }
+
+    pub fn new_behavior_response(behavior_response: &BehaviorResponse) -> Self {
+        Self(cddl_lib::ResponsePayload::new_behavior_response(
+            behavior_response.clone().into(),
+        ))
+    }
+
+    pub fn kind(&self) -> ResponsePayloadKind {
+        match &self.0 {
+            cddl_lib::ResponsePayload::CoreResponse(_) => ResponsePayloadKind::CoreResponse,
+            cddl_lib::ResponsePayload::KeymapResponse(_) => ResponsePayloadKind::KeymapResponse,
+            cddl_lib::ResponsePayload::BehaviorResponse(_) => ResponsePayloadKind::BehaviorResponse,
+        }
+    }
+
+    pub fn as_core_response(&self) -> Option<CoreResponse> {
+        match &self.0 {
+            cddl_lib::ResponsePayload::CoreResponse(core_response) => {
+                Some(core_response.clone().into())
+            }
+            _ => None,
+        }
+    }
+
+    pub fn as_keymap_response(&self) -> Option<KeymapResponse> {
+        match &self.0 {
+            cddl_lib::ResponsePayload::KeymapResponse(keymap_response) => {
+                Some(keymap_response.clone().into())
+            }
+            _ => None,
+        }
+    }
+
+    pub fn as_behavior_response(&self) -> Option<BehaviorResponse> {
+        match &self.0 {
+            cddl_lib::ResponsePayload::BehaviorResponse(behavior_response) => {
+                Some(behavior_response.clone().into())
+            }
+            _ => None,
+        }
+    }
+}
+
+impl From<cddl_lib::ResponsePayload> for ResponsePayload {
+    fn from(native: cddl_lib::ResponsePayload) -> Self {
+        Self(native)
+    }
+}
+
+impl From<ResponsePayload> for cddl_lib::ResponsePayload {
+    fn from(wasm: ResponsePayload) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::ResponsePayload> for ResponsePayload {
+    fn as_ref(&self) -> &cddl_lib::ResponsePayload {
+        &self.0
+    }
+}
+
+#[wasm_bindgen]
+pub enum ResponsePayloadKind {
+    CoreResponse,
+    KeymapResponse,
+    BehaviorResponse,
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
 pub struct UnlockRequest(cddl_lib::UnlockRequest);
 
 #[wasm_bindgen]
@@ -689,6 +1458,45 @@ impl From<UnlockRequest> for cddl_lib::UnlockRequest {
 
 impl AsRef<cddl_lib::UnlockRequest> for UnlockRequest {
     fn as_ref(&self) -> &cddl_lib::UnlockRequest {
+        &self.0
+    }
+}
+
+#[derive(Clone, Debug)]
+#[wasm_bindgen]
+pub struct UnlockResponse(cddl_lib::UnlockResponse);
+
+#[wasm_bindgen]
+impl UnlockResponse {
+    pub fn to_cbor_bytes(&self) -> Vec<u8> {
+        cddl_lib::serialization::ToCBORBytes::to_cbor_bytes(&self.0)
+    }
+
+    pub fn from_cbor_bytes(cbor_bytes: &[u8]) -> Result<UnlockResponse, JsError> {
+        cddl_lib::serialization::Deserialize::from_cbor_bytes(cbor_bytes)
+            .map(Self)
+            .map_err(|e| JsError::new(&format!("from_bytes: {}", e)))
+    }
+
+    pub fn new() -> Self {
+        Self(cddl_lib::UnlockResponse::new())
+    }
+}
+
+impl From<cddl_lib::UnlockResponse> for UnlockResponse {
+    fn from(native: cddl_lib::UnlockResponse) -> Self {
+        Self(native)
+    }
+}
+
+impl From<UnlockResponse> for cddl_lib::UnlockResponse {
+    fn from(wasm: UnlockResponse) -> Self {
+        wasm.0
+    }
+}
+
+impl AsRef<cddl_lib::UnlockResponse> for UnlockResponse {
+    fn as_ref(&self) -> &cddl_lib::UnlockResponse {
         &self.0
     }
 }
