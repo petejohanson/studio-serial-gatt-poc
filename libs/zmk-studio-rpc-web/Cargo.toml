@@ -1,0 +1,28 @@
+[package]
+name = "zmk-studio-rpc-web"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+prost = "0.12.3"
+futures = "0.3.30"
+zmk-studio-rpc = { path = "../zmk-studio-rpc" }
+
+wasm-bindgen = "0.2.45"
+wasm-bindgen-futures = "0.4.41"
+
+[dependencies.web-sys]
+version = "0.3.68"
+features = [
+  # Baseline DOM needs.
+  "console", "Document", "Element", "Window", "Navigator",
+  # Serial related options
+  "Serial", "SerialPort", "SerialOptions", "SerialPortRequestOptions",
+  "WritableStream", "WritableStreamDefaultWriter", "ReadableStream","ReadableStreamDefaultReader",
+  "Bluetooth", "BluetoothDevice", "BluetoothRemoteGattServer", "BluetoothRemoteGattService", "BluetoothRemoteGattCharacteristic", "RequestDeviceOptions"
+]
+
+[dependencies.js-sys]
+version = "0.3.68"
+features = [
+]

@@ -1,0 +1,13 @@
+[package]
+name = "zmk-studio-rpc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+prost = "0.12.3"
+futures = "0.3.30"
+
+[build-dependencies]
+prost-build = { version = "0.12.3" }

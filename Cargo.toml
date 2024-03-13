@@ -1,3 +1,4 @@
+workspace = { members = ["libs/zmk-studio-rpc"] }
 # You must change these to your own details.
 [package]
 name = "rust-webpack-template"
@@ -31,15 +32,16 @@ futures = "0.3.30"
 
 itertools = "0.9.0"
 
-prost = "0.12.3"
-
-cddl-lib = { path = "studio-msgs/rust" }
-cddl-lib-wasm = { path = "studio-msgs/wasm" }
-
 # `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
 # compared to the default allocator's ~10K. However, it is slower than the default
 # allocator, so it's not enabled by default.
 wee_alloc = { version = "0.4.2", optional = true }
+
+[dependencies.zmk-studio-rpc]
+path = "libs/zmk-studio-rpc"
+
+[dependencies.zmk-studio-rpc-web]
+path = "libs/zmk-studio-rpc-web"
 
 # The `web-sys` crate allows you to interact with the various browser APIs,
 # like the DOM.
@@ -69,9 +71,6 @@ console_error_panic_hook = "0.1.5"
 # These crates are used for running unit tests.
 [dev-dependencies]
 wasm-bindgen-test = "0.2.45"
-futures = "0.1.27"
 js-sys = "0.3.22"
 wasm-bindgen-futures = "0.3.22"
 
-[build-dependencies]
-prost-build = { version = "0.12.3" }
