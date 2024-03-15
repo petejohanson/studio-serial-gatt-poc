@@ -755,6 +755,7 @@ name = "zmk-studio-rpc"
 version = "0.1.0"
 dependencies = [
  "futures 0.3.30",
+ "pin-utils",
  "prost",
  "prost-build",
 ]

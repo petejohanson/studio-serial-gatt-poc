@@ -1,4 +1,7 @@
+use std::future::ready;
+
 use futures::stream;
+use futures::stream::StreamExt;
 use futures::FutureExt;
 use prost::Message;
 use wasm_bindgen_futures::JsFuture;
@@ -6,7 +9,6 @@ use web_sys::wasm_bindgen::JsValue;
 use web_sys::{console, ReadableStreamDefaultReader};
 use zmk_studio_rpc::messages::zmk::{Request, Response};
 
-use zmk_studio_rpc::rpc;
 use zmk_studio_rpc::rpc::framing;
 use zmk_studio_rpc::rpc::transports::{Connection, RpcErrorType};
 
@@ -77,7 +79,7 @@ impl<'a> futures::sink::Sink<Request> for SerialSink {
 
     fn start_send(self: std::pin::Pin<&mut Self>, item: Request) -> Result<(), Self::Error> {
         let mut buf = Vec::with_capacity(200);
-        item.encode(&mut buf);
+        item.encode(&mut buf)?;
 
         let framed_bytes = framing::framed(buf);
 
@@ -108,31 +110,25 @@ impl<'a> futures::sink::Sink<Request> for SerialSink {
 
 async fn next_read(
     r: ReadableStreamDefaultReader,
-) -> Option<(Response, ReadableStreamDefaultReader)> {
+) -> Option<(Vec<u8>, ReadableStreamDefaultReader)> {
     console::log_1(&JsValue::from("Reading from the reader"));
     let read_resp: JsValue = wasm_bindgen_futures::JsFuture::from(r.read())
         .await
         .unwrap();
 
-    console::log_1(&JsValue::from("Got a read response from the reader"));
-    // let done = js_sys::Reflect::get(&read_resp, &JsValue::from("done")).unwrap();
     let val = js_sys::Uint8Array::from(
         js_sys::Reflect::get(&read_resp, &JsValue::from("value")).unwrap(),
     );
 
-    let val_vec = val.to_vec();
-
-    let (msg_bytes, _remainder) = rpc::framing::parse_frame(val_vec);
-
-    let response_msg: Result<Response, _> = Response::decode(&mut msg_bytes.as_slice());
-    // let response_msg: Result<Response, _> =
-    //     cddl_lib::serialization::Deserialize::from_cbor_bytes(&msg_bytes);
-
-    Some((response_msg.expect("Got a message"), r))
+    Some((val.to_vec(), r))
 }
 
-fn response_stream(
+fn response_stream<'a>(
     reader: web_sys::ReadableStreamDefaultReader,
-) -> impl futures::stream::Stream<Item = Response> {
-    stream::unfold(reader, next_read)
+) -> impl futures::stream::Stream<Item = Response> + 'a {
+    let byte_stream = Box::pin(stream::unfold(reader, next_read).flat_map(|v| stream::iter(v)));
+
+    framing::to_frames(byte_stream)
+        .filter_map(|f| ready(f.ok()))
+        .filter_map(|f| ready(Response::decode(&mut f.as_slice()).ok()))
 }

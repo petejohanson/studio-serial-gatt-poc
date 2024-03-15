@@ -1,11 +1,11 @@
 use futures::future::join;
-use std::future::Future;
+use std::{convert::TryFrom, future::Future};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures;
 
 use web_sys::console;
 
-use zmk_studio_rpc::rpc::RpcConn;
+use zmk_studio_rpc::{messages::zmk::behaviors::{behavior_binding_parameter_domain::Type, BehaviorBindingParameterDetails, BehaviorBindingParameterDomainStandard}, rpc::RpcConn};
 
 // When the `wee_alloc` feature is enabled, this uses `wee_alloc` as the global
 // allocator.
@@ -53,9 +53,30 @@ async fn test_rpc_conn<'a>(mut rpc_conn: RpcConn<'a>, demux: impl Future<Output 
                 }
             }
         }
+        
+        let render_param = |p: Option<BehaviorBindingParameterDetails>| {
+            p.and_then(|p| p.domain).and_then(|d| d.r#type).map(|t| {
+                match t {
+                    Type::Standard(s) =>
+                        match BehaviorBindingParameterDomainStandard::try_from(s) {
+                            Ok(BehaviorBindingParameterDomainStandard::Nil) => "Nil",
+                            Ok(BehaviorBindingParameterDomainStandard::HidUsage) => "HID Usage",
+                            Ok(BehaviorBindingParameterDomainStandard::LayerIndex) => "Layer Index",
+                            Err(_) => "None"
+                        },
+                    Type::Custom(_c) => "Custom",
+                }
+            }).unwrap_or("None")
+        };
 
-        let behaviors = itertools::join(details.into_iter().map(|d| d.friendly_name), ", ");
-        console::log_1(&JsValue::from(format!("Got behaviors: {behaviors}")));
+        let behaviors = itertools::join(details.into_iter().map(|d| {
+            let n = d.friendly_name;
+            let param1 = render_param(d.param1);
+            let param2 = render_param(d.param2);
+
+            format!("Behavior: {n}, param1: {param1}, param2: {param2}")
+        }), "\n");
+        console::log_1(&JsValue::from(format!("Got behaviors:\n{behaviors}")));
     };
 
     join(caller, demux).await;

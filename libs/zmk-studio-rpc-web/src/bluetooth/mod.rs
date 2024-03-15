@@ -1,7 +1,8 @@
 use futures::channel::mpsc::unbounded;
 use futures::executor::block_on;
 use futures::FutureExt;
-use futures::SinkExt;
+use futures::sink::SinkExt;
+use futures::StreamExt;
 use js_sys::Uint8Array;
 use prost::Message;
 use wasm_bindgen::closure::Closure;
@@ -51,7 +52,7 @@ impl<'a> futures::sink::Sink<Request> for GattRequestSink {
 
     fn start_send(self: std::pin::Pin<&mut Self>, item: Request) -> Result<(), Self::Error> {
         let mut buf = Vec::with_capacity(200);
-        item.encode(&mut buf);
+        item.encode(&mut buf)?;
 
         let mut framed_bytes = framing::framed(buf);
 
@@ -102,15 +103,9 @@ fn get_gatt_response_stream(
 
         let val = val.to_vec();
 
-        let (msg_bytes, _remainder) = framing::parse_frame(val);
+        let mut val_stream = futures::stream::iter(val).map(Ok);
 
-        let response_msg: Result<Response, _> = Response::decode(&mut msg_bytes.as_slice());
-        // let response_msg: Result<Response, _> =
-        //     cddl_lib::serialization::Deserialize::from_cbor_bytes(&msg_bytes);
-
-        if let Ok(resp) = response_msg {
-            block_on(sink.send(resp));
-        }
+        block_on(sink.send_all(&mut val_stream));
     }) as Box<dyn FnMut(_)>);
 
     chrc.add_event_listener_with_callback(
@@ -119,7 +114,9 @@ fn get_gatt_response_stream(
     );
     chrc_cb.forget();
 
-    return stream;
+    return framing::to_frames(stream).filter_map(|f| std::future::ready(f.ok())).filter_map(|f| {
+        std::future::ready(Response::decode(&mut f.as_slice()).ok())
+    });
 }
 
 pub async fn get_connection() -> Result<

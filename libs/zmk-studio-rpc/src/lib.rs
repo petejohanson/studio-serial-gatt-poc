@@ -1,13 +1,16 @@
-
 pub mod messages {
     include!(concat!(env!("OUT_DIR"), "/_include.rs"));
 }
 
 pub mod rpc {
-    use crate::messages::zmk::{Request, RequestResponse, Response, Notification, response::Type};
+    use crate::messages::zmk::{response::Type, Notification, Request, RequestResponse, Response};
     use futures::{channel::mpsc::SendError, lock::Mutex, Future, SinkExt, StreamExt};
 
     pub mod framing {
+        use futures::stream::unfold;
+        use futures::stream::StreamExt;
+        use futures::Stream;
+
         fn is_escaped_byte(b: u8) -> bool {
             match b {
                 FRAME_SOF | FRAME_ESC | FRAME_EOF => true,
@@ -30,52 +33,160 @@ pub mod rpc {
                 .collect();
         }
 
+        #[derive(PartialEq, Debug, Copy, Clone)]
+        pub enum FrameParsingErr {
+            UnexpectedSof,
+            DataBeforeSof,
+        }
+
+        #[derive(PartialEq, Clone, Copy, Debug)]
         enum FramingParseState {
             FramingStateIdle,
             FramingStateAwaitingData,
             FramingStateEscaped,
-            FramingStateErr,
-            FramingStateEof,
         }
 
         const FRAME_SOF: u8 = 0xAB;
         const FRAME_ESC: u8 = 0xAC;
         const FRAME_EOF: u8 = 0xAD;
 
-        pub fn parse_frame(vec: Vec<u8>) -> (Vec<u8>, Vec<u8>) {
-            let mut state = FramingParseState::FramingStateIdle;
-            let mut dest: Vec<u8> = Vec::new();
-            let mut rest: Vec<u8> = Vec::new();
+        struct FrameFoldState<T>
+        where
+            T: Stream<Item = u8>,
+        {
+            stream: T,
+            parse_state: Result<FramingParseState, FrameParsingErr>,
+            pending_frame: Vec<u8>,
+        }
 
-            for v in vec.into_iter() {
-                match state {
-                    FramingParseState::FramingStateIdle => {
+        async fn get_next_frame<T>(
+            mut state: FrameFoldState<T>,
+        ) -> Option<(Result<Vec<u8>, FrameParsingErr>, FrameFoldState<T>)>
+        where
+            T: Stream<Item = u8> + Unpin,
+        {
+            while let Some(b) = state.stream.next().await {
+                match state.parse_state {
+                    Ok(FramingParseState::FramingStateIdle) => {
                         // TODO: Stop if we already got a frame
-                        match v {
-                            FRAME_SOF => state = FramingParseState::FramingStateAwaitingData,
-                            _ => state = FramingParseState::FramingStateErr,
+                        match b {
+                            FRAME_SOF => {
+                                state.parse_state = Ok(FramingParseState::FramingStateAwaitingData)
+                            }
+                            _ => state.parse_state = Err(FrameParsingErr::DataBeforeSof),
                         };
                     }
-                    FramingParseState::FramingStateAwaitingData => {
-                        match v {
-                            FRAME_ESC => state = FramingParseState::FramingStateEscaped,
-                            FRAME_EOF => state = FramingParseState::FramingStateEof,
-                            data_byte => dest.push(data_byte),
+                    Ok(FramingParseState::FramingStateAwaitingData) => {
+                        state.parse_state = match b {
+                            FRAME_SOF => Err(FrameParsingErr::UnexpectedSof),
+                            FRAME_ESC => Ok(FramingParseState::FramingStateEscaped),
+                            FRAME_EOF => Ok(FramingParseState::FramingStateIdle),
+                            data_byte => {
+                                state.pending_frame.push(data_byte);
+
+                                Ok(FramingParseState::FramingStateAwaitingData)
+                            }
                         };
                     }
-                    FramingParseState::FramingStateEscaped => {
-                        dest.push(v);
+                    Ok(FramingParseState::FramingStateEscaped) => {
+                        state.pending_frame.push(b);
                     }
-                    FramingParseState::FramingStateErr => match v {
-                        FRAME_SOF => state = FramingParseState::FramingStateIdle,
-                        _ => (),
-                    },
-                    FramingParseState::FramingStateEof => {
-                        rest.push(v);
+                    Err(_) => {
+                        state.parse_state = match b {
+                            FRAME_SOF => Ok(FramingParseState::FramingStateAwaitingData),
+                            _ => Err(FrameParsingErr::DataBeforeSof),
+                        }
                     }
+                };
+
+                if state.parse_state.is_err() {
+                    state.pending_frame.clear();
+                    return Some((Err(state.parse_state.clone().err().unwrap()), state));
+                } else if state.parse_state == Ok(FramingParseState::FramingStateIdle) {
+                    let frame = state.pending_frame.clone();
+                    state.pending_frame.clear();
+
+                    return Some((Ok(frame), state));
                 }
             }
-            return (dest, rest);
+
+            None
+        }
+
+        pub fn to_frames<T>(stream: T) -> impl Stream<Item = Result<Vec<u8>, FrameParsingErr>>
+        where
+            T: Stream<Item = u8> + Unpin,
+        {
+            unfold(
+                FrameFoldState {
+                    stream,
+                    parse_state: Ok(FramingParseState::FramingStateIdle),
+                    pending_frame: Vec::with_capacity(64),
+                },
+                get_next_frame,
+            )
+        }
+
+        #[test]
+        fn test_single_frame() {
+            let test = async {
+                let stream = futures::stream::iter(vec![FRAME_SOF, 1, 2, 3, FRAME_EOF]);
+
+                let frames_stream = to_frames(stream);
+
+                pin_mut!(frames_stream);
+
+                let parsed = frames_stream
+                    .next()
+                    .await
+                    .expect("Stream had an item")
+                    .expect("bytes parsed without parsing error");
+
+                assert_eq!(parsed, vec![1, 2, 3]);
+            };
+
+            futures::executor::block_on(test)
+        }
+
+        #[test]
+        fn test_multiple_frame() {
+            let test = async {
+                let stream = futures::stream::iter(vec![
+                    FRAME_SOF, 1, 2, 3, FRAME_EOF, FRAME_SOF, 3, 2, 1, FRAME_EOF,
+                ]);
+
+                let frames_stream = to_frames(stream);
+
+                let frames: Vec<_> = frames_stream.collect().await;
+
+                assert_eq!(frames, vec![Ok(vec![1, 2, 3]), Ok(vec![3, 2, 1])]);
+            };
+
+            futures::executor::block_on(test)
+        }
+
+        #[test]
+        fn test_recovery() {
+            let test = async {
+                let stream = futures::stream::iter(vec![
+                    FRAME_SOF, 1, 2, 3, FRAME_SOF, 3, FRAME_SOF, 2, 1, FRAME_EOF,
+                ]);
+
+                let frames_stream = to_frames(stream);
+
+                let frames: Vec<_> = frames_stream.collect().await;
+
+                assert_eq!(
+                    frames,
+                    vec![
+                        Err(FrameParsingErr::UnexpectedSof),
+                        Err(FrameParsingErr::DataBeforeSof),
+                        Ok(vec![2, 1])
+                    ]
+                );
+            };
+
+            futures::executor::block_on(test)
         }
     }
 
@@ -168,8 +279,8 @@ pub mod rpc {
     }
 
     pub mod transports {
-        use std::fmt;
         use crate::messages::zmk::{Request, Response};
+        use std::fmt;
 
         use futures::channel::mpsc::SendError;
 
@@ -184,16 +295,23 @@ pub mod rpc {
         #[derive(Debug, Clone)]
         pub enum RpcErrorType {
             ConnectionFailedErr,
+            MessageEncodingFailed(prost::EncodeError),
+            MessageDecodingFailed,
         }
 
         impl std::error::Error for RpcErrorType {}
+
+        impl From<prost::EncodeError> for RpcErrorType {
+            fn from(value: prost::EncodeError) -> Self {
+                RpcErrorType::MessageEncodingFailed(value)
+            }
+        }
 
         impl From<SendError> for RpcErrorType {
             fn from(value: SendError) -> Self {
                 RpcErrorType::ConnectionFailedErr
             }
         }
-
 
         impl fmt::Display for RpcErrorType {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
