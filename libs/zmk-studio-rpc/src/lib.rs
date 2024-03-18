@@ -280,9 +280,24 @@ pub mod rpc {
 
     pub mod transports {
         use crate::messages::zmk::{Request, Response};
+        use futures::{Stream, StreamExt};
+        use prost::Message;
         use std::fmt;
 
         use futures::channel::mpsc::SendError;
+
+        pub fn get_response_stream_from_framed_bytes<T>(
+            stream: T,
+        ) -> impl Stream<Item = Response> + Unpin
+        where
+            T: Stream<Item = u8> + Unpin,
+        {
+            let frames = Box::pin(super::framing::to_frames(stream));
+
+            frames
+                .filter_map(|f| std::future::ready(f.ok()))
+                .filter_map(|f| std::future::ready(Response::decode(&mut f.as_slice()).ok()))
+        }
 
         pub struct Connection<
             TSink: futures::sink::Sink<Request>,

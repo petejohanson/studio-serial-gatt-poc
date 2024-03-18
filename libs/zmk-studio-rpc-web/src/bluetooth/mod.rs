@@ -1,7 +1,7 @@
 use futures::channel::mpsc::unbounded;
 use futures::executor::block_on;
-use futures::FutureExt;
 use futures::sink::SinkExt;
+use futures::FutureExt;
 use futures::StreamExt;
 use js_sys::Uint8Array;
 use prost::Message;
@@ -13,7 +13,9 @@ use web_sys::{console, BluetoothRemoteGattCharacteristic};
 use zmk_studio_rpc::messages::zmk::{Request, Response};
 
 use zmk_studio_rpc::rpc::framing;
-use zmk_studio_rpc::rpc::transports::{Connection, RpcErrorType};
+use zmk_studio_rpc::rpc::transports::{
+    get_response_stream_from_framed_bytes, Connection, RpcErrorType,
+};
 
 const SERVICE_UUID: &str = "00000000-0196-6107-c967-c5cfb1c2482a";
 const RPC_CHRC_UUID: &str = "00000001-0196-6107-c967-c5cfb1c2482a";
@@ -114,9 +116,7 @@ fn get_gatt_response_stream(
     );
     chrc_cb.forget();
 
-    return framing::to_frames(stream).filter_map(|f| std::future::ready(f.ok())).filter_map(|f| {
-        std::future::ready(Response::decode(&mut f.as_slice()).ok())
-    });
+    get_response_stream_from_framed_bytes(stream)
 }
 
 pub async fn get_connection() -> Result<

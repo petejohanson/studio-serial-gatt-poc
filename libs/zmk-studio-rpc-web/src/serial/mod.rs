@@ -1,4 +1,3 @@
-use std::future::ready;
 
 use futures::stream;
 use futures::stream::StreamExt;
@@ -10,7 +9,9 @@ use web_sys::{console, ReadableStreamDefaultReader};
 use zmk_studio_rpc::messages::zmk::{Request, Response};
 
 use zmk_studio_rpc::rpc::framing;
-use zmk_studio_rpc::rpc::transports::{Connection, RpcErrorType};
+use zmk_studio_rpc::rpc::transports::{
+    get_response_stream_from_framed_bytes, Connection, RpcErrorType,
+};
 
 pub async fn get_connection() -> Result<
     Connection<
@@ -128,7 +129,5 @@ fn response_stream<'a>(
 ) -> impl futures::stream::Stream<Item = Response> + 'a {
     let byte_stream = Box::pin(stream::unfold(reader, next_read).flat_map(|v| stream::iter(v)));
 
-    framing::to_frames(byte_stream)
-        .filter_map(|f| ready(f.ok()))
-        .filter_map(|f| ready(Response::decode(&mut f.as_slice()).ok()))
+    get_response_stream_from_framed_bytes(byte_stream)
 }
