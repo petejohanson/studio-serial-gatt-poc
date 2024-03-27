@@ -1,11 +1,22 @@
-use futures::future::join;
+use futures::future::join_all;
+use futures::StreamExt;
 use std::{convert::TryFrom, future::Future};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures;
 
 use web_sys::console;
 
-use zmk_studio_rpc::{messages::zmk::behaviors::{behavior_binding_parameter_domain::Type, BehaviorBindingParameterDetails, BehaviorBindingParameterDomainStandard}, rpc::RpcConn};
+use zmk_studio_rpc::{
+    messages::zmk::{
+        behaviors::{
+            behavior_binding_parameters::ParameterTypes, BehaviorBindingParameterStandardDomain,
+            BehaviorBindingParameters,
+        },
+        core::notification::NotificationType,
+        Notification,
+    },
+    rpc::RpcConn,
+};
 
 // When the `wee_alloc` feature is enabled, this uses `wee_alloc` as the global
 // allocator.
@@ -15,8 +26,14 @@ use zmk_studio_rpc::{messages::zmk::behaviors::{behavior_binding_parameter_domai
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-async fn test_rpc_conn<'a>(mut rpc_conn: RpcConn<'a>, demux: impl Future<Output = ()>) -> () {
+async fn test_rpc_conn<'a>(
+    mut rpc_conn: RpcConn<'a>,
+    demux: impl Future<Output = ()>,
+    notif_stream: impl futures::Stream<Item = zmk_studio_rpc::messages::zmk::Notification>,
+) -> () {
     let caller = async move {
+        // let unlock_req = zmk_studio_rpc::messages::zmk::Request { request_id: 0, subsystem: Some(zmk_studio_rpc::messages::zmk::request::Subsystem::Core(zmk_studio_rpc::messages::zmk::core::Request { request_type: Some(zmk_studio_rpc::messages::zmk::core::request::RequestType::RequestUnlock(true)) }))};
+        // let resp = rpc_conn.call(unlock_req).await;
         let req_list_all = zmk_studio_rpc::messages::zmk::Request { request_id: 123, subsystem: Some(zmk_studio_rpc::messages::zmk::request::Subsystem::Behaviors(zmk_studio_rpc::messages::zmk::behaviors::Request { request_type: Some(zmk_studio_rpc::messages::zmk::behaviors::request::RequestType::ListAllBehaviors(true)) }))};
 
         let list = rpc_conn.call(req_list_all).await.map(|zmk_studio_rpc::messages::zmk::RequestResponse { subsystem, .. }| {
@@ -53,33 +70,78 @@ async fn test_rpc_conn<'a>(mut rpc_conn: RpcConn<'a>, demux: impl Future<Output 
                 }
             }
         }
-        
-        let render_param = |p: Option<BehaviorBindingParameterDetails>| {
-            p.and_then(|p| p.domain).and_then(|d| d.r#type).map(|t| {
-                match t {
-                    Type::Standard(s) =>
-                        match BehaviorBindingParameterDomainStandard::try_from(s) {
-                            Ok(BehaviorBindingParameterDomainStandard::Nil) => "Nil",
-                            Ok(BehaviorBindingParameterDomainStandard::HidUsage) => "HID Usage",
-                            Ok(BehaviorBindingParameterDomainStandard::LayerIndex) => "Layer Index",
-                            Err(_) => "None"
-                        },
-                    Type::Custom(_c) => "Custom",
-                }
-            }).unwrap_or("None")
+
+        let render_param = |p: i32| match BehaviorBindingParameterStandardDomain::try_from(p) {
+            Ok(BehaviorBindingParameterStandardDomain::Nil) => "Nil",
+            Ok(BehaviorBindingParameterStandardDomain::HidUsage) => "HID Usage",
+            Ok(BehaviorBindingParameterStandardDomain::LayerIndex) => "Layer Index",
+            Err(_) => "None",
         };
 
-        let behaviors = itertools::join(details.into_iter().map(|d| {
-            let n = d.friendly_name;
-            let param1 = render_param(d.param1);
-            let param2 = render_param(d.param2);
+        let behaviors = itertools::join(
+            details.into_iter().map(|d| {
+                let n = d.friendly_name;
 
-            format!("Behavior: {n}, param1: {param1}, param2: {param2}")
-        }), "\n");
+                let (p1, p2) = if let Some(BehaviorBindingParameters {
+                    parameter_types: Some(p),
+                }) = d.parameters
+                {
+                    match p {
+                        ParameterTypes::Standard(s) => (
+                            s.param1.map_or("none", |p| render_param(p.domain)),
+                            s.param2.map_or("none", |p| render_param(p.domain)),
+                        ),
+                        ParameterTypes::Custom(c) => {
+                            for set in c.param_sets.iter() {
+                                let len = set.param1.len();
+                                for p in set.param1.iter() {
+                                    let name = &p.name;
+                                    console::log_1(&JsValue::from(format!("param1 {name}")));
+                                }
+
+                                for p in set.param2.iter() {
+                                    let name = &p.name;
+                                    console::log_1(&JsValue::from(format!("param2 {name}")));
+                                }
+                            }
+                            ("Custom", "Custom")
+                        }
+                    }
+                } else {
+                    ("None", "None")
+                };
+
+                format!("Behavior: {n}, param1: {p1}, param2: {p2}")
+            }),
+            "\n",
+        );
         console::log_1(&JsValue::from(format!("Got behaviors:\n{behaviors}")));
     };
 
-    join(caller, demux).await;
+    let notification_consumer = async {
+        let mut notif_stream = Box::pin(notif_stream);
+        while let n = notif_stream.next().await {
+            console::log_1(&JsValue::from("Got a notification"));
+            match n {
+                Some(Notification {
+                    subsystem:
+                        Some(zmk_studio_rpc::messages::zmk::notification::Subsystem::Core(
+                            zmk_studio_rpc::messages::zmk::core::Notification {
+                                notification_type: Some(NotificationType::LockStateChanged(ls)),
+                            },
+                        )),
+                }) => console::log_1(&JsValue::from(format!("Lock state {ls}"))),
+                _ => console::log_1(&JsValue::from("Some other notification")),
+            }
+        }
+    };
+    let futures: Vec<std::pin::Pin<Box<Future<Output = ()>>>> = vec![
+        Box::pin(caller),
+        Box::pin(demux),
+        Box::pin(notification_consumer),
+    ];
+
+    join_all(futures.into_iter()).await;
 }
 
 async fn test_ble() -> () {
@@ -87,16 +149,18 @@ async fn test_ble() -> () {
         .await
         .unwrap();
 
-    let (rpc_conn, demux) = zmk_studio_rpc::rpc::set_up_connection(conn).await.unwrap();
-    test_rpc_conn(rpc_conn, demux).await;
+    let (rpc_conn, demux, notif_stream) =
+        zmk_studio_rpc::rpc::set_up_connection(conn).await.unwrap();
+    test_rpc_conn(rpc_conn, demux, notif_stream).await;
 }
 
 async fn test_serial() -> () {
     let conn = zmk_studio_rpc_web::serial::get_connection().await.unwrap();
 
-    let (rpc_conn, demux) = zmk_studio_rpc::rpc::set_up_connection(conn).await.unwrap();
+    let (rpc_conn, demux, notif_stream) =
+        zmk_studio_rpc::rpc::set_up_connection(conn).await.unwrap();
 
-    test_rpc_conn(rpc_conn, demux).await;
+    test_rpc_conn(rpc_conn, demux, notif_stream).await;
 }
 
 // This is like the `main` function, except for JavaScript.

@@ -253,7 +253,9 @@ pub mod rpc {
         while let Some(resp) = stream.next().await {
             match resp.r#type {
                 Some(Type::RequestResponse(req_resp)) => req_resp_sink.send(req_resp).await,
-                Some(Type::Notification(notif)) => notif_sink.send(notif).await,
+                Some(Type::Notification(notif)) => {
+                    notif_sink.send(notif).await
+                },
                 _ => panic!("No oneof set!"),
             };
         }
@@ -265,17 +267,17 @@ pub mod rpc {
         TStream: futures::stream::Stream<Item = Response> + 'a,
     >(
         conn: transports::Connection<TSink, TStream>,
-    ) -> Result<(RpcConn<'a>, impl Future<Output = ()>), crate::rpc::transports::RpcErrorType> {
+    ) -> Result<(RpcConn<'a>, impl Future<Output = ()>, impl futures::stream::Stream<Item = Notification> + 'a), crate::rpc::transports::RpcErrorType> {
         let transports::Connection { sink, stream } = conn;
 
-        let (notif_sink, mut _notif_stream) = futures::channel::mpsc::unbounded();
+        let (notif_sink, notif_stream) = futures::channel::mpsc::unbounded();
         let (req_resp_sink, req_resp_stream) = futures::channel::mpsc::unbounded();
 
         let resp_demux = response_demux(stream, req_resp_sink, notif_sink);
 
         let rpc_conn = RpcConn::new(sink, req_resp_stream);
 
-        Ok((rpc_conn, resp_demux))
+        Ok((rpc_conn, resp_demux, notif_stream))
     }
 
     pub mod transports {

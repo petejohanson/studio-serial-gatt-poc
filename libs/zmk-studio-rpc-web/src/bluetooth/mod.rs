@@ -101,9 +101,7 @@ fn get_gatt_response_stream(
             .unwrap()
             .clone();
 
-        let val = Uint8Array::new(&char.value().expect("Have a value!").buffer());
-
-        let val = val.to_vec();
+        let val = Uint8Array::new(&char.value().expect("Have a value!").buffer()).to_vec();
 
         let mut val_stream = futures::stream::iter(val).map(Ok);
 
