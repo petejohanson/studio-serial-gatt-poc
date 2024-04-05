@@ -9,8 +9,7 @@ use web_sys::console;
 use zmk_studio_rpc::{
     messages::zmk::{
         behaviors::{
-            behavior_binding_parameters::ParameterTypes, BehaviorBindingParameterStandardDomain,
-            BehaviorBindingParameters,
+            get_behavior_details_response::ParametersType, BehaviorBindingParameterStandardDomain
         },
         core::notification::NotificationType,
         Notification,
@@ -45,7 +44,6 @@ async fn test_rpc_conn<'a>(
                     Some(r.behaviors)
                 }
                 _ => {
-                    console::log_1(&JsValue::from("Some other response"));
                     None
                 },
             }
@@ -68,6 +66,8 @@ async fn test_rpc_conn<'a>(
                         ()
                     },
                 }
+            } else {
+                console::log_1(&JsValue::from(format!("Got an error! {s}")));
             }
         }
 
@@ -75,6 +75,7 @@ async fn test_rpc_conn<'a>(
             Ok(BehaviorBindingParameterStandardDomain::Nil) => "Nil",
             Ok(BehaviorBindingParameterStandardDomain::HidUsage) => "HID Usage",
             Ok(BehaviorBindingParameterStandardDomain::LayerIndex) => "Layer Index",
+            Ok(BehaviorBindingParameterStandardDomain::HsvValue) => "HSV Value",
             Err(_) => "None",
         };
 
@@ -82,16 +83,15 @@ async fn test_rpc_conn<'a>(
             details.into_iter().map(|d| {
                 let n = d.friendly_name;
 
-                let (p1, p2) = if let Some(BehaviorBindingParameters {
-                    parameter_types: Some(p),
-                }) = d.parameters
+                let (p1, p2) = if let Some(p
+                ) = d.parameters_type
                 {
                     match p {
-                        ParameterTypes::Standard(s) => (
-                            s.param1.map_or("none", |p| render_param(p.domain)),
-                            s.param2.map_or("none", |p| render_param(p.domain)),
+                        ParametersType::Standard(s) => (
+                            render_param(s.param1),
+                            render_param(s.param2),
                         ),
-                        ParameterTypes::Custom(c) => {
+                        ParametersType::Custom(c) => {
                             for set in c.param_sets.iter() {
                                 let len = set.param1.len();
                                 for p in set.param1.iter() {
