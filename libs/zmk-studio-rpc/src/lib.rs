@@ -90,6 +90,7 @@ pub mod rpc {
                     }
                     Ok(FramingParseState::FramingStateEscaped) => {
                         state.pending_frame.push(b);
+                        state.parse_state = Ok(FramingParseState::FramingStateAwaitingData);
                     }
                     Err(_) => {
                         state.parse_state = match b {
@@ -132,9 +133,7 @@ pub mod rpc {
             let test = async {
                 let stream = futures::stream::iter(vec![FRAME_SOF, 1, 2, 3, FRAME_EOF]);
 
-                let frames_stream = to_frames(stream);
-
-                pin_mut!(frames_stream);
+                let mut frames_stream = Box::pin(to_frames(stream));
 
                 let parsed = frames_stream
                     .next()
@@ -149,13 +148,32 @@ pub mod rpc {
         }
 
         #[test]
+        fn test_escaped_frame() {
+            let test = async {
+                let stream = futures::stream::iter(vec![FRAME_SOF, 1, FRAME_ESC, FRAME_EOF, 2, 3, FRAME_EOF]);
+
+                let mut frames_stream = Box::pin(to_frames(stream));
+
+                let parsed = frames_stream
+                    .next()
+                    .await
+                    .expect("Stream had an item")
+                    .expect("bytes parsed without parsing error");
+
+                assert_eq!(parsed, vec![1, FRAME_EOF, 2, 3]);
+            };
+
+            futures::executor::block_on(test)
+        }
+
+        #[test]
         fn test_multiple_frame() {
             let test = async {
                 let stream = futures::stream::iter(vec![
                     FRAME_SOF, 1, 2, 3, FRAME_EOF, FRAME_SOF, 3, 2, 1, FRAME_EOF,
                 ]);
 
-                let frames_stream = to_frames(stream);
+                let frames_stream = Box::pin(to_frames(stream));
 
                 let frames: Vec<_> = frames_stream.collect().await;
 
@@ -298,7 +316,11 @@ pub mod rpc {
 
             frames
                 .filter_map(|f| std::future::ready(f.ok()))
-                .filter_map(|f| std::future::ready(Response::decode(&mut f.as_slice()).ok()))
+                .filter_map(|f| {
+                    let val = Response::decode(&mut f.as_slice());
+                    
+                    std::future::ready(val.ok())
+                })
         }
 
         pub struct Connection<
